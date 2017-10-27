@@ -18,9 +18,9 @@ main :: IO ()
 main = do
   sock <- socket AF_INET Stream 0     -- create socket
   setSocketOption sock ReuseAddr 1    -- make socket immediately reusable - eases debuggin
-  bind sock (SockAddrInet 4242 iNADDR_ANY) -- listen on TCD port 4242
+  bind sock (SockAddrInet 53 iNADDR_ANY) -- listen on TCD port 4242
   listen sock 2                       -- set a max of 2 queued connections
-  chan <- newChan
+  chan <- newChan                      -- create a new chan
   _ <- forkIO $ fix $ \loop -> do
     (_, _) <- readChan chan
     loop
@@ -31,7 +31,7 @@ type Msg = (Int, String)
 mainLoop :: Socket -> Chan Msg -> Int -> IO ()
 mainLoop sock chan msgNum = do
   conn <- accept sock                 -- accept a connection and handle it
-  forkIO (runConn conn chan msgNum)
+  forkIO (runConn conn chan msgNum)    -- pass the channel to runConn
   mainLoop sock chan $! msgNum + 1    -- repeat 
  
 runConn :: (Socket, SockAddr) -> Chan Msg -> Int -> IO ()
