@@ -18,7 +18,7 @@ main :: IO ()
 main = do
   sock <- socket AF_INET Stream 0     -- create socket
   setSocketOption sock ReuseAddr 1    -- make socket immediately reusable - eases debuggin
-  bind sock (SockAddrInet 53 iNADDR_ANY) -- listen on TCD port 4242
+  bind sock (SockAddrInet 53 iNADDR_ANY) -- listen on TCD port 53
   listen sock 2                       -- set a max of 2 queued connections
   chan <- newChan                      -- create a new chan
   _ <- forkIO $ fix $ \loop -> do
@@ -36,9 +36,17 @@ mainLoop sock chan msgNum = do
  
 runConn :: (Socket, SockAddr) -> Chan Msg -> Int -> IO ()
 runConn (sock, _) chan msgNum = do
+   
     let broadcast msg = writeChan chan (msgNum, msg)
     hdl <- socketToHandle sock ReadWriteMode
     hSetBuffering hdl NoBuffering
+    line <- readChan commLine
+    broadcast ("JOINED_CHATROOM:" ++ line 
+		  SERVER_IP: [IP address of chat room]
+		  PORT: [port number of chat room]
+		  ROOM_REF: [integer that uniquely identifies chat room on server]
+		  JOIN_ID: [integer that uniquely identifies client joining]
+		
  
     hPutStrLn hdl "Hi, what's your name?"
     name <- fmap init (hGetLine hdl)
